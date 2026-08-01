@@ -1,0 +1,21 @@
+# Copie para terraform.tfvars (ignorado pelo git) e ajuste.
+# Nenhuma credencial aqui: a URI do MongoDB e o SESSION_SECRET ficam no
+# Secrets Manager, preenchidos fora do Terraform.
+
+project = "cadastro-usuario"
+region  = "us-east-1"
+
+availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+domain_name     = "agenda.exemplo.com.br"
+hosted_zone_id  = "Z000000000000000000000"
+
+# Bucket com policy de escrita para o serviço de logs do ELB da região.
+access_logs_bucket = "cadastro-usuario-alb-logs"
+
+# Em produção use o SHA do commit, não "latest".
+image_tag = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
+
+alert_emails       = ["oncall@exemplo.com.br"]
+monthly_budget_usd = 200

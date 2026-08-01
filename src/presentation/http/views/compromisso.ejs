@@ -1,0 +1,91 @@
+<%- include('includes/head'); %>
+<%- include('includes/nav'); %>
+
+<main class="container" id="conteudo">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 my-4">
+      <%- include('includes/messages') %>
+
+      <div class="app-card">
+      <div class="page-head">
+        <h1><%= compromisso.id ? 'Editar compromisso' : 'Novo compromisso' %></h1>
+        <p class="subtitle mb-0">Título e data/hora são obrigatórios.</p>
+      </div>
+
+      <form action="<%= compromisso.id ? '/compromisso/edit/' + compromisso.id : '/compromisso/register' %>" method="post" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="titulo">Título <span aria-hidden="true">*</span></label>
+          <input id="titulo" value="<%= compromisso.titulo || '' %>" type="text" class="form-control"
+                 name="titulo" required maxlength="120" autocomplete="off" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="inicioEm">Data e hora <span aria-hidden="true">*</span></label>
+          <input id="inicioEm" value="<%= compromisso.inicioParaFormulario || '' %>" type="datetime-local"
+                 class="form-control" name="inicioEm" required>
+        </div>
+
+        <div class="form-group">
+          <label for="contatoId">Contato vinculado</label>
+          <select id="contatoId" name="contatoId" class="form-control">
+            <option value="">Nenhum</option>
+            <% contatos.forEach((contato) => { %>
+              <option value="<%= contato.id %>"
+                <%= compromisso.contatoId === contato.id ? 'selected' : '' %>>
+                <%= contato.nomeCompleto %>
+              </option>
+            <% }); %>
+          </select>
+          <small class="form-text text-muted">
+            Opcional — vincula o compromisso a alguém da sua agenda.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="etiquetas">Etiquetas</label>
+          <input id="etiquetas" value="<%= compromisso.etiquetasTexto || '' %>" type="text" class="form-control"
+                 name="etiquetas" maxlength="340" autocomplete="off"
+                 data-seletor-de-etiquetas
+                 aria-describedby="etiquetas-ajuda">
+          <small id="etiquetas-ajuda" class="form-text text-muted">
+            Digite e pressione Enter para criar uma etiqueta nova.
+          </small>
+          <% if ((etiquetasDisponiveis || []).length > 0) { %>
+            <div class="sugestoes-etiquetas" data-sugestoes-de-etiquetas>
+              <span class="sugestoes-titulo">Já usadas:</span>
+              <% etiquetasDisponiveis.forEach((etiqueta) => { %>
+                <button type="button" class="badge badge-etiqueta sugestao"
+                  data-sugestao-etiqueta="<%= etiqueta %>"><%= etiqueta %></button>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="notas">Notas</label>
+          <textarea id="notas" name="notas" class="form-control" rows="3"
+                    maxlength="500" aria-describedby="notas-ajuda"><%= compromisso.notas || '' %></textarea>
+          <small id="notas-ajuda" class="form-text text-muted">Até 500 caracteres.</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a class="btn btn-link" href="/calendario">Cancelar</a>
+      </form>
+
+      <% if (compromisso.id) { %>
+        <!-- Form separado, NUNCA aninhado no de edição: form dentro de form é
+             HTML inválido e o navegador submeteria o formulário errado. -->
+        <form action="/compromisso/delete/<%= compromisso.id %>" method="post"
+          class="text-right mt-3" data-confirmar="Excluir este compromisso?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-link text-danger p-0">Excluir este compromisso</button>
+        </form>
+      <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('includes/footer'); %>

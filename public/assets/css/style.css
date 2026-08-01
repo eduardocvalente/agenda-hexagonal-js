@@ -1,0 +1,1157 @@
+/* =============================================================================
+   Agenda — Design System
+   -----------------------------------------------------------------------------
+   Camada de identidade visual sobre o Bootstrap 4. Sem dependência externa:
+   tipografia por system font stack, ícones por SVG inline, tema claro/escuro
+   automático. As classes do Bootstrap são preservadas (grid, form-group,
+   table) e reestilizadas aqui — o HTML das views não precisa ser reescrito.
+   Copyright (c) 2026 Eduardo Valente.
+   ========================================================================== */
+
+/* ----------------------------------------------------------------- Tokens -- */
+:root {
+  /* Form controls e scrollbars nativos seguem o tema do usuário. */
+  color-scheme: light dark;
+
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+
+  --bg: #f6f7fb;
+  --bg-grad-1: #eef2ff;
+  --bg-grad-2: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #047857;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #b91c1c;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #b45309;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+
+  --ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
+ * Tema escuro em DOIS seletores com o mesmo corpo, de propósito:
+ *  - o media query cobre quem segue o sistema (sem escolha manual);
+ *  - [data-tema='escuro'] cobre a escolha manual do botão da navbar.
+ * O :not([data-tema='claro']) permite que a escolha manual por claro VENÇA
+ * o sistema escuro. Sem pré-processador, a duplicação é o custo do recurso —
+ * qualquer ajuste de cor precisa ser feito nos dois blocos.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    --brand-50: #1e1b4b;
+    --brand-100: #312e81;
+    --bg: #0b1120;
+    --bg-grad-1: #0f172a;
+    --bg-grad-2: #0b1120;
+    --surface: #111827;
+    --surface-2: #0f172a;
+    --border: #1f2937;
+    --border-strong: #334155;
+    --text: #e5e7eb;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
+    --success-bg: #052e2b;
+    --success-border: #134e4a;
+    --success-text: #6ee7b7;
+    --danger-bg: #3f1d1d;
+    --danger-border: #7f1d1d;
+    --danger-text: #fca5a5;
+    --warning-bg: #3a2e12;
+    --warning-border: #78350f;
+    --warning-text: #fcd34d;
+    --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-tema='escuro'] {
+  --brand-50: #1e1b4b;
+  --brand-100: #312e81;
+  --bg: #0b1120;
+  --bg-grad-1: #0f172a;
+  --bg-grad-2: #0b1120;
+  --surface: #111827;
+  --surface-2: #0f172a;
+  --border: #1f2937;
+  --border-strong: #334155;
+  --text: #e5e7eb;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --success-bg: #052e2b;
+  --success-border: #134e4a;
+  --success-text: #6ee7b7;
+  --danger-bg: #3f1d1d;
+  --danger-border: #7f1d1d;
+  --danger-text: #fca5a5;
+  --warning-bg: #3a2e12;
+  --warning-border: #78350f;
+  --warning-text: #fcd34d;
+  --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Form controls e scrollbars nativos acompanham a escolha manual. */
+:root[data-tema='claro'] {
+  color-scheme: light;
+}
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ Base -- */
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background-color: var(--bg);
+  background-image: radial-gradient(1200px 600px at 100% -10%, var(--bg-grad-1), transparent 55%),
+    radial-gradient(900px 500px at -10% 0%, var(--brand-50), transparent 45%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* 100dvh corrige a barra de endereço dinâmica do Safari iOS;
+     100vh permanece como fallback para navegadores sem dvh. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  letter-spacing: -0.01em;
+  /* iOS: sem flash cinza ao tocar em links/botões. */
+  -webkit-tap-highlight-color: transparent;
+  /* iOS em paisagem infla fontes sem isto. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+main {
+  min-height: calc(100vh - 66px);
+  padding-bottom: 4rem;
+}
+
+h1,
+h2,
+h3,
+.h4 {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.1rem);
+}
+
+a {
+  color: var(--brand-600);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s var(--ease);
+}
+a:hover {
+  color: var(--brand-700);
+  text-decoration: none;
+}
+
+code {
+  font-family: var(--font-mono);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.12em 0.4em;
+  font-size: 0.86em;
+  color: var(--brand-600);
+}
+
+::selection {
+  background: var(--brand-100);
+  color: var(--brand-700);
+}
+
+/* ---------------------------------------------------------------- Navbar -- */
+.navbar.bg-dark {
+  /* Fallback sólido primeiro: navegador sem color-mix (Safari < 16.2) descarta
+     a linha seguinte e ficaria com o bg-dark do Bootstrap — contraste quebrado
+     no tema claro. Com o fallback, degrada para superfície sólida. */
+  background: var(--surface) !important;
+  background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+  padding: 0.7rem 1.25rem;
+}
+
+.navbar.navbar-dark .navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+.navbar-brand .brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.navbar-brand .brand-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+.navbar.navbar-dark .nav-link {
+  color: var(--text-muted) !important;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem !important;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.navbar.navbar-dark .nav-link:hover {
+  color: var(--text) !important;
+  background: var(--surface-2);
+}
+.navbar.navbar-dark .nav-link.active {
+  color: var(--brand-600) !important;
+  background: var(--brand-50);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .navbar.navbar-dark .nav-link.active {
+    color: #c7d2fe !important;
+  }
+}
+:root[data-tema='escuro'] .navbar.navbar-dark .nav-link.active {
+  color: #c7d2fe !important;
+}
+
+/* Botão de alternância de tema: mostra o ícone do tema de DESTINO. */
+.botao-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.botao-tema svg {
+  width: 18px;
+  height: 18px;
+}
+.botao-tema .icone-sol {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .botao-tema .icone-lua {
+    display: none;
+  }
+  :root:not([data-tema='claro']) .botao-tema .icone-sol {
+    display: block;
+  }
+}
+:root[data-tema='escuro'] .botao-tema .icone-lua {
+  display: none;
+}
+:root[data-tema='escuro'] .botao-tema .icone-sol {
+  display: block;
+}
+:root[data-tema='claro'] .botao-tema .icone-lua {
+  display: block;
+}
+:root[data-tema='claro'] .botao-tema .icone-sol {
+  display: none;
+}
+
+.navbar-dark .navbar-toggler {
+  border-color: var(--border);
+  color: var(--text);
+}
+.navbar-dark .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* botão "Sair" dentro de <form> na navbar */
+.navbar-nav .btn-link.nav-link {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.navbar-nav .btn-link.nav-link:hover {
+  color: var(--danger) !important;
+  background: var(--danger-bg);
+}
+
+/* ------------------------------------------------------------------ Card -- */
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 2rem;
+  animation: rise 0.4s var(--ease) both;
+}
+@media (min-width: 992px) {
+  .app-card {
+    padding: 2.5rem;
+  }
+}
+
+.page-head {
+  margin-bottom: 1.5rem;
+}
+.page-head h1 {
+  margin-bottom: 0.35rem;
+}
+.page-head .subtitle {
+  color: var(--text-muted);
+  font-size: 1.02rem;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------- Buttons -- */
+.btn {
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.15rem;
+  border: 1px solid transparent;
+  transition: transform 0.08s var(--ease), box-shadow 0.15s var(--ease),
+    background 0.15s var(--ease), color 0.15s var(--ease);
+  letter-spacing: -0.01em;
+}
+.btn:focus,
+.btn.focus {
+  box-shadow: var(--ring);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  border-color: var(--brand-600);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+  border-color: var(--brand-700);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-outline-primary {
+  color: var(--brand-600);
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+.btn-outline-primary:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-500);
+  color: var(--brand-700);
+}
+
+.btn-link {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.btn-link:hover {
+  color: var(--brand-600);
+}
+.btn-block + .btn-block {
+  margin-top: 0.5rem;
+}
+/* O padding generoso de .btn engoliria a variação pequena. */
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------- Inputs --- */
+label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.form-control {
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  /* Nunca abaixo de 16px: o Safari iOS dá zoom automático em input menor,
+     e o usuário fica com a página ampliada depois de digitar. */
+  font-size: 1rem;
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+.form-control::placeholder {
+  color: var(--text-subtle);
+}
+.form-control:focus {
+  color: var(--text);
+  background-color: var(--surface);
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+  outline: 0;
+}
+.form-group {
+  margin-bottom: 1.15rem;
+}
+.form-text {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+select.form-control {
+  cursor: pointer;
+}
+/* Safari desenha o search com cantos e X próprios — normaliza. */
+input[type='search'].form-control {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/* ------------------------------------------------------------------ Table -- */
+.table {
+  color: var(--text);
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table thead th {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  font-weight: 700;
+  padding: 0.75rem 0.9rem;
+}
+.table tbody td {
+  border: 0;
+  border-top: 1px solid var(--border);
+  padding: 0.9rem;
+  vertical-align: middle;
+}
+.table tbody tr {
+  transition: background 0.12s var(--ease);
+}
+.table tbody tr:hover {
+  background: var(--surface-2);
+}
+.table tbody tr:first-child td {
+  border-top: 0;
+}
+
+/* ----------------------------------------------------------------- Alerts -- */
+.alert {
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.94rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  box-shadow: var(--shadow-xs);
+  animation: rise 0.3s var(--ease) both;
+}
+.alert::before {
+  flex: none;
+  margin-top: 1px;
+  font-weight: 700;
+}
+.alert-success {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.alert-success::before {
+  content: "✓";
+}
+.alert-danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+.alert-danger::before {
+  content: "!";
+}
+
+/* ----------------------------------------------------------------- Badges -- */
+.badge {
+  font-weight: 600;
+  padding: 0.32em 0.7em;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+}
+.badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+}
+.table-warning,
+.table-warning > td {
+  background: var(--warning-bg) !important;
+}
+
+/* ------------------------------------------------------------- Pagination -- */
+.pagination {
+  gap: 0.35rem;
+}
+.page-link {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm) !important;
+  padding: 0.45rem 0.8rem;
+  background: var(--surface);
+  font-weight: 600;
+}
+.page-link:hover {
+  background: var(--surface-2);
+  color: var(--brand-600);
+  border-color: var(--border-strong);
+}
+.page-item.disabled .page-link {
+  color: var(--text-subtle);
+  background: transparent;
+  border-color: var(--border);
+}
+
+/* ----------------------------------------------------------- Empty / hero -- */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem 1rem;
+}
+.empty-state svg {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1rem;
+  color: var(--brand-500);
+  opacity: 0.9;
+}
+.empty-state .lead {
+  color: var(--text-muted);
+}
+
+.lead {
+  font-size: 1.05rem;
+  font-weight: 400;
+}
+.text-muted {
+  color: var(--text-muted) !important;
+}
+.text-danger {
+  color: var(--danger) !important;
+}
+.display-1 {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Sem suporte a texto-gradiente, o número ficaria invisível (fill
+   transparente sobre fundo recortado que não existe). Fallback sólido. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .display-1 {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--brand-600);
+  }
+}
+
+/* -------------------------------------------------------------- Calendário -- */
+.calendario {
+  width: 100%;
+  min-width: 640px; /* abaixo disso as células ficam ilegíveis; o wrapper rola */
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.calendario thead th {
+  padding: 0.5rem 0.4rem;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-subtle);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.calendario tbody td {
+  height: 96px;
+  vertical-align: top;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-width: 0 1px 1px 0;
+  background: var(--surface);
+}
+.calendario tbody tr td:first-child {
+  border-left-width: 1px;
+}
+.calendario .celula-vazia {
+  background: var(--surface-2);
+}
+.calendario .celula-dia {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.calendario .celula-hoje {
+  background: var(--brand-50);
+}
+.calendario .celula-hoje .celula-dia {
+  color: #fff;
+  background: var(--brand-600);
+  border-radius: var(--radius-pill);
+  min-width: 1.5rem;
+  text-align: center;
+  padding: 0.05rem 0.35rem;
+}
+.celula-evento {
+  display: block;
+  margin-bottom: 0.2rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--brand-700);
+  background: var(--brand-100);
+  border-left: 3px solid var(--brand-500);
+  border-radius: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+.celula-evento:hover {
+  color: #fff;
+  background: var(--brand-600);
+  text-decoration: none;
+}
+.celula-evento-hora {
+  font-weight: 700;
+  margin-right: 0.25rem;
+  opacity: 0.8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .celula-evento {
+    color: #c7d2fe;
+  }
+}
+:root[data-tema='escuro'] .celula-evento {
+  color: #c7d2fe;
+}
+
+/* ------------------------------------------------------------ Autenticação -- */
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+@media (min-width: 992px) {
+  .auth-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.auth-painel {
+  display: none;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(600px 300px at 20% 0%, rgba(255, 255, 255, 0.14), transparent 60%),
+    linear-gradient(150deg, var(--brand-600), var(--brand-700));
+  color: #fff;
+  box-shadow: var(--shadow-md);
+  padding: 2.5rem;
+}
+@media (min-width: 992px) {
+  .auth-painel {
+    display: flex;
+    align-items: center;
+  }
+}
+.auth-painel-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  margin-bottom: 1.25rem;
+}
+.auth-painel-logo svg {
+  width: 24px;
+  height: 24px;
+}
+.auth-painel h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.25rem;
+  max-width: 22ch;
+}
+.auth-painel-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.auth-painel-lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+}
+.auth-painel-lista svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: #a5b4fc;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.auth-alternativa {
+  margin: 1.25rem 0 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+/* Campo de senha com botão de mostrar/ocultar. */
+.campo-senha {
+  position: relative;
+}
+.campo-senha .form-control {
+  padding-right: 2.9rem;
+}
+.alternar-senha {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition:
+    color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+.alternar-senha:hover {
+  color: var(--brand-600);
+  background: var(--surface-2);
+}
+.alternar-senha.ativo {
+  color: var(--brand-600);
+}
+.alternar-senha svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Medidor de força de senha (progressivo: sem JS, só o texto de ajuda). */
+.medidor-senha .medidor-trilho {
+  height: 5px;
+  margin-top: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.medidor-senha .medidor-preenchido {
+  width: 0;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  transition:
+    width 0.25s var(--ease),
+    background-color 0.25s var(--ease);
+}
+.medidor-senha.nivel-1 .medidor-preenchido {
+  background: var(--danger);
+}
+.medidor-senha.nivel-2 .medidor-preenchido {
+  background: #f59e0b;
+}
+.medidor-senha.nivel-3 .medidor-preenchido {
+  background: var(--brand-500);
+}
+.medidor-senha.nivel-4 .medidor-preenchido {
+  background: #10b981;
+}
+
+/* CTA da navbar para visitantes. */
+.nav-cta {
+  color: #fff !important;
+}
+
+/* ------------------------------------------------------ Painel de números -- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.stat-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 0.35rem;
+  color: var(--brand-600);
+  background: var(--brand-50);
+  border-radius: var(--radius-sm);
+}
+.stat-icone svg {
+  width: 20px;
+  height: 20px;
+}
+.stat-numero {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.stat-rotulo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.lista-barras {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.barra-rotulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.barra-total {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.barra-trilho {
+  height: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.barra-preenchida {
+  height: 100%;
+  min-width: 4px;
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-700));
+  border-radius: var(--radius-pill);
+}
+
+.lista-simples {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.lista-simples li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.lista-simples li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* ------------------------------------------------------- Barra de filtros -- */
+.filtro-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.filtro-busca {
+  flex: 1 1 240px;
+  max-width: 420px;
+}
+.filtro-check {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0.25rem;
+  white-space: nowrap;
+}
+.filtro-check .form-check-input {
+  position: static;
+  margin: 0;
+}
+.filtro-check .form-check-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ------------------------------------------------- Etiquetas e favoritos -- */
+.badge-etiqueta {
+  display: inline-block;
+  margin: 0 0.25rem 0.15rem 0;
+  padding: 0.24em 0.7em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+.badge-etiqueta:hover,
+.badge-etiqueta:focus {
+  color: #fff;
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  text-decoration: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .badge-etiqueta {
+    color: #c7d2fe;
+  }
+}
+:root[data-tema='escuro'] .badge-etiqueta {
+  color: #c7d2fe;
+}
+
+/* Seletor de etiquetas (chips) — montado pelo app.js sobre o input real. */
+.chips-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.chips-etiquetas:focus-within {
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+.chips-etiquetas .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+}
+.chip-remover {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.chip-remover:hover {
+  opacity: 1;
+}
+.chips-digitavel {
+  flex: 1 1 140px;
+  min-width: 120px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 0.15rem 0;
+}
+.chips-digitavel::placeholder {
+  color: var(--text-subtle);
+}
+.chips-digitavel:disabled {
+  cursor: not-allowed;
+}
+
+/* Sugestões de etiquetas sempre visíveis abaixo do campo. */
+.sugestoes-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+.sugestoes-titulo {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 0.2rem;
+}
+button.badge-etiqueta.sugestao {
+  cursor: pointer;
+  /* Botão nativo herda aparência de badge; só o traço fica pontilhado para
+     diferenciar "disponível" de "aplicada". */
+  border-style: dashed;
+  background: transparent;
+}
+button.badge-etiqueta.sugestao:hover {
+  border-style: solid;
+}
+
+.col-estrela {
+  width: 48px;
+}
+.btn-estrela {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-subtle);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color 0.15s var(--ease),
+    background-color 0.15s var(--ease),
+    transform 0.15s var(--ease);
+}
+.btn-estrela svg {
+  width: 18px;
+  height: 18px;
+}
+.btn-estrela:hover {
+  color: #f59e0b;
+  background: var(--warning-bg);
+  transform: scale(1.1);
+}
+.btn-estrela.ativo {
+  color: #f59e0b;
+}
+
+/* --------------------------------------------------------- Acessibilidade -- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid var(--brand-500);
+  outline-offset: 2px;
+}
+.sr-only-focusable:focus {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1080;
+  width: auto;
+  height: auto;
+  padding: 0.6rem 1rem;
+  background: var(--brand-600);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+/* -------------------------------------------------------------- Animações -- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

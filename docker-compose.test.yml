@@ -1,0 +1,39 @@
+# Execução da suíte de testes em container, isolada do ambiente local.
+#
+#   docker compose -f docker-compose.test.yml run --rm tests
+#
+# Sai com o código de saída dos testes — é o que o CI usa para falhar o build.
+
+name: cadastro-usuario-test
+
+services:
+  tests:
+    build:
+      context: .
+      target: build
+    environment:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://root:test@mongo-test:27017/cadastro_test?authSource=admin
+      SESSION_SECRET: test-only-secret-0123456789abcdef0123456789
+      BCRYPT_ROUNDS: '4'
+      LOG_LEVEL: silent
+      # Usa o Mongo do compose em vez de baixar o binário do mongodb-memory-server.
+      MONGOMS_DISABLE_POSTINSTALL: '1'
+    depends_on:
+      mongo-test:
+        condition: service_healthy
+    command: ['npm', 'run', 'test:unit']
+
+  mongo-test:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: test
+    # tmpfs: banco descartável, sem I/O em disco — testes mais rápidos e sem resíduo.
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

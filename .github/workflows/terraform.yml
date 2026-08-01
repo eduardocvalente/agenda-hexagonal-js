@@ -1,0 +1,148 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths: ['infra/terraform/**', '.github/workflows/terraform.yml']
+  push:
+    branches: [main]
+    paths: ['infra/terraform/**']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+      action:
+        description: Ação
+        required: true
+        default: plan
+        type: choice
+        options: [plan, apply]
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: '1.9.8'
+  AWS_REGION: us-east-1
+
+jobs:
+  validate:
+    name: Validar e analisar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Formatação
+        run: terraform fmt -check -recursive infra/terraform
+
+      - name: Validar cada ambiente
+        working-directory: infra/terraform
+        run: |
+          for dir in environments/*/; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      # tfsec/checkov pegam bucket público, SG 0.0.0.0/0, storage sem
+      # criptografia — erros que o `validate` aceita sem reclamar.
+      - name: Análise de segurança (Checkov)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra/terraform
+          framework: terraform
+          soft_fail: false
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov.sarif
+        continue-on-error: true
+
+      # Estimativa de custo no PR: evita descobrir o NAT Gateway na fatura.
+      - name: Estimativa de custo (Infracost)
+        if: github.event_name == 'pull_request' && env.INFRACOST_API_KEY != ''
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+          infracost breakdown --path infra/terraform/environments/staging --format table
+
+  plan:
+    name: Plan (${{ github.event.inputs.environment || 'staging' }})
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Role somente-leitura no plan: nada aqui deve poder alterar recursos.
+          role-to-assume: ${{ secrets.AWS_TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Plan
+        id: plan
+        working-directory: infra/terraform/environments/${{ github.event.inputs.environment || 'staging' }}
+        run: |
+          terraform init
+          terraform plan -no-color -out=tfplan -detailed-exitcode | tee plan.txt || true
+          {
+            echo '### Terraform plan'
+            echo '```'
+            tail -c 60000 plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment || 'staging' }}
+          path: infra/terraform/environments/*/tfplan
+          retention-days: 5
+
+  apply:
+    name: Apply (${{ github.event.inputs.environment }})
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    needs: plan
+    runs-on: ubuntu-latest
+    # Aprovação manual obrigatória via required reviewers do Environment.
+    environment: ${{ github.event.inputs.environment }}-infra
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          path: infra/terraform/environments
+
+      # Aplica o plano salvo, não um plano novo: garante que o revisor aprovou
+      # exatamente o que será executado.
+      - name: Apply
+        working-directory: infra/terraform/environments/${{ github.event.inputs.environment }}
+        run: |
+          terraform init
+          terraform apply -auto-approve tfplan

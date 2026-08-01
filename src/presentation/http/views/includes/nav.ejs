@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="/">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    </span>
+    Agenda
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Abrir menu de navegação">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ml-auto align-items-lg-center">
+
+      <li class="nav-item">
+        <!-- O rótulo acessível descreve a AÇÃO; o ícone visível é o do tema
+             de destino (lua no claro, sol no escuro), via CSS. -->
+        <button type="button" class="botao-tema nav-link" data-alternar-tema
+          aria-label="Alternar entre tema claro e escuro">
+          <svg class="icone-lua" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="icone-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </li>
+
+      <% if (user) { %>
+        <li class="nav-item">
+          <a class="nav-link <%= caminhoAtual === '/contato/index' ? 'active' : '' %>"
+             href="/contato/index" <%- caminhoAtual === '/contato/index' ? 'aria-current="page"' : '' %>>Cadastrar contato</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= caminhoAtual === '/calendario' ? 'active' : '' %>"
+             href="/calendario" <%- caminhoAtual === '/calendario' ? 'aria-current="page"' : '' %>>Calendário</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= caminhoAtual === '/painel' ? 'active' : '' %>"
+             href="/painel" <%- caminhoAtual === '/painel' ? 'aria-current="page"' : '' %>>Visão geral</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= caminhoAtual === '/auditoria' ? 'active' : '' %>"
+             href="/auditoria" <%- caminhoAtual === '/auditoria' ? 'aria-current="page"' : '' %>>Minhas atividades</a>
+        </li>
+        <li class="nav-item">
+          <!-- Logout é uma mudança de estado: precisa ser POST com token CSRF,
+               senão qualquer <img src="/login/logout"> de terceiros desloga o usuário. -->
+          <form action="/login/logout" method="post" class="form-inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn-link nav-link">Sair</button>
+          </form>
+        </li>
+      <% } else { %>
+        <li class="nav-item">
+          <a class="nav-link <%= caminhoAtual === '/login/index' ? 'active' : '' %>"
+             href="/login/index">Entrar</a>
+        </li>
+        <li class="nav-item ml-lg-2">
+          <a class="btn btn-primary btn-sm nav-cta" href="/cadastro">Criar conta</a>
+        </li>
+      <% } %>
+
+    </ul>
+  </div>
+</nav>

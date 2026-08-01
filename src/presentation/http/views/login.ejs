@@ -1,0 +1,56 @@
+<%- include('includes/head'); %>
+<%- include('includes/nav'); %>
+
+<main class="container" id="conteudo">
+  <div class="row justify-content-center">
+    <div class="col-xl-9 my-4">
+      <%- include('includes/messages'); %>
+
+      <div class="auth-grid">
+        <%- include('includes/auth-painel'); %>
+
+        <div class="app-card auth-card">
+          <div class="page-head">
+            <h1>Bem-vindo de volta</h1>
+            <p class="subtitle mb-0">Entre para acessar a sua agenda.</p>
+          </div>
+
+          <form action="/login/login" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div class="form-group">
+              <label for="login-email">Seu e-mail</label>
+              <input id="login-email" type="email" class="form-control" name="email"
+                     required maxlength="254" autocomplete="username" autofocus>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Sua senha</label>
+              <div class="campo-senha">
+                <input id="login-password" type="password" class="form-control" name="password"
+                       required maxlength="128" autocomplete="current-password">
+                <button type="button" class="alternar-senha" data-alternar-senha="login-password"
+                  aria-label="Mostrar senha" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+          </form>
+
+          <p class="auth-alternativa">
+            Ainda não tem conta?
+            <a href="/cadastro">Criar conta gratuita</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('includes/footer'); %>

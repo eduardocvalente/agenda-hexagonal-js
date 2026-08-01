@@ -1,0 +1,42 @@
+# Aplicado automaticamente em `docker compose up` — ambiente de desenvolvimento.
+# Nunca use este arquivo em homologação ou produção.
+
+services:
+  app:
+    build:
+      target: build
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      BCRYPT_ROUNDS: '8'
+    command: ['npx', 'nodemon', 'server.js']
+    # Hot reload. node_modules fica em volume anônimo para não ser sobrescrito
+    # pelo bind mount do host (que pode ter binários de outra plataforma).
+    volumes:
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
+      - ./server.js:/app/server.js:ro
+      - ./scripts:/app/scripts:ro
+      - /app/node_modules
+    read_only: false
+    user: node
+
+  mongo:
+    # Exposto localmente para inspeção com Compass/mongosh durante o desenvolvimento.
+    ports:
+      - '127.0.0.1:27017:27017'
+
+  # Interface web só de desenvolvimento: `docker compose --profile tools up`
+  mongo-express:
+    image: mongo-express:1.0.2
+    profiles: ['tools']
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://app:${MONGO_APP_PASSWORD:?}@mongo:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH_USERNAME: dev
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-dev}
+    ports:
+      - '127.0.0.1:8081:8081'

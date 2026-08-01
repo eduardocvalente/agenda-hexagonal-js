@@ -1,0 +1,179 @@
+<%- include('includes/head'); %>
+<%- include('includes/nav'); %>
+
+<main class="container" id="conteudo">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 my-4">
+      <div class="page-head">
+        <h1>Visão geral</h1>
+        <p class="subtitle">Os números da sua agenda em um só lugar.</p>
+      </div>
+
+      <%- include('includes/messages') %>
+
+      <div class="stat-grid">
+        <div class="app-card stat-card">
+          <span class="stat-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </span>
+          <p class="stat-numero"><%= totais.contatos %></p>
+          <p class="stat-rotulo">Contato<%= totais.contatos === 1 ? '' : 's' %></p>
+        </div>
+
+        <div class="app-card stat-card">
+          <span class="stat-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </span>
+          <p class="stat-numero"><%= totais.favoritos %></p>
+          <p class="stat-rotulo">Favorito<%= totais.favoritos === 1 ? '' : 's' %></p>
+        </div>
+
+        <div class="app-card stat-card">
+          <span class="stat-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+          </span>
+          <p class="stat-numero"><%= totais.etiquetas %></p>
+          <p class="stat-rotulo">Etiqueta<%= totais.etiquetas === 1 ? '' : 's' %> em uso</p>
+        </div>
+
+        <div class="app-card stat-card">
+          <span class="stat-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </span>
+          <p class="stat-numero"><%= totais.compromissos %></p>
+          <p class="stat-rotulo">Compromisso<%= totais.compromissos === 1 ? '' : 's' %> à frente</p>
+        </div>
+      </div>
+
+      <% if (proximosCompromissos.length > 0) { %>
+        <div class="app-card mb-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h2 class="h5 mb-0">Próximos compromissos</h2>
+            <a class="btn btn-link btn-sm" href="/calendario">Ver calendário</a>
+          </div>
+          <ul class="lista-simples mt-2">
+            <% proximosCompromissos.forEach((compromisso) => { %>
+              <li>
+                <span>
+                  <a href="/compromisso/index/<%= compromisso.id %>"><%= compromisso.titulo %></a>
+                  <% if (compromisso.etiquetas.length > 0) { %>
+                    <span class="d-inline-block ml-1">
+                      <% compromisso.etiquetas.forEach((etiqueta) => { %>
+                        <span class="badge badge-etiqueta"><%= etiqueta %></span>
+                      <% }); %>
+                    </span>
+                  <% } %>
+                </span>
+                <time class="text-muted small" datetime="<%= compromisso.inicioEm.toISOString() %>">
+                  <%= compromisso.inicioFormatado %>
+                </time>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div class="row">
+        <div class="col-lg-6 mb-4">
+          <div class="app-card h-100">
+            <h2 class="h5">Contatos por etiqueta</h2>
+            <% if (porEtiqueta.length === 0) { %>
+              <p class="subtitle mb-0">
+                Nenhuma etiqueta ainda. Adicione etiquetas aos contatos para vê-las aqui.
+              </p>
+            <% } else { %>
+              <ul class="lista-barras">
+                <% porEtiqueta.forEach((grupo) => { %>
+                  <li>
+                    <div class="barra-rotulo">
+                      <a class="badge badge-etiqueta"
+                         href="/?etiqueta=<%= encodeURIComponent(grupo.etiqueta) %>"><%= grupo.etiqueta %></a>
+                      <span class="barra-total"><%= grupo.total %></span>
+                    </div>
+                    <div class="barra-trilho" aria-hidden="true">
+                      <div class="barra-preenchida"
+                        style="width: <%= Math.round((grupo.total / maiorTotalDeEtiqueta) * 100) %>%"></div>
+                    </div>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+          <div class="app-card h-100">
+            <h2 class="h5">Adicionados recentemente</h2>
+            <% if (recentes.length === 0) { %>
+              <p class="subtitle mb-0">Sua agenda ainda está vazia.</p>
+              <p class="mt-2 mb-0">
+                <a class="btn btn-primary btn-sm" href="/contato/index">Cadastrar primeiro contato</a>
+              </p>
+            <% } else { %>
+              <ul class="lista-simples">
+                <% recentes.forEach((contato) => { %>
+                  <li>
+                    <a href="/contato/index/<%= contato.id %>"><%= contato.nomeCompleto %></a>
+                    <span class="text-muted small">
+                      <%= contato.email || contato.telefone %>
+                    </span>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <h2 class="h5 mb-0">Atividade recente</h2>
+          <a class="btn btn-link btn-sm" href="/auditoria">Ver tudo</a>
+        </div>
+        <% if (atividadeRecente.length === 0) { %>
+          <p class="subtitle mb-0 mt-2">Nenhuma atividade registrada ainda.</p>
+        <% } else { %>
+          <ul class="lista-simples mt-2">
+            <% atividadeRecente.forEach((registro) => { %>
+              <li>
+                <span>
+                  <%= registro.descricao %>
+                  <% if (registro.detalhes && registro.detalhes.nome) { %>
+                    — <%= registro.detalhes.nome %>
+                  <% } %>
+                  <% if (registro.houveFalha) { %>
+                    <span class="badge badge-warning ml-1">falhou</span>
+                  <% } %>
+                </span>
+                <time class="text-muted small" datetime="<%= registro.ocorridoEm.toISOString() %>">
+                  <%= registro.ocorridoEm.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %>
+                </time>
+              </li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('includes/footer'); %>

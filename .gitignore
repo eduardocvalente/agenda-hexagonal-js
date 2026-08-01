@@ -1,0 +1,27 @@
+node_modules/
+
+# Segredos — qualquer variação de .env fica fora do versionamento.
+.env
+.env.*
+!.env.example
+
+# Logs e artefatos de execução
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/
+
+# Terraform — o state contém segredos em texto puro
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.auto.tfvars
+!*.tfvars.example
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

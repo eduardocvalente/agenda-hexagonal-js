@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Vulnerabilidade de segurança
+    url: https://github.com/eduardocvalente/agenda-hexagonal/security/advisories/new
+    about: Reporte vulnerabilidades pelo canal privado, nunca em issue pública.

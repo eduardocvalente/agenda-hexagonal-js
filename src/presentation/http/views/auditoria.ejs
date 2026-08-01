@@ -1,0 +1,112 @@
+<%- include('includes/head'); %>
+<%- include('includes/nav'); %>
+
+<main class="container" id="conteudo">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 my-4">
+      <div class="page-head text-center">
+        <h1>Minhas atividades</h1>
+        <p class="subtitle">
+          Registro do que foi feito na sua conta. Se algo aqui não foi você,
+          <a href="/login/index">troque sua senha</a>.
+        </p>
+      </div>
+
+      <%- include('includes/messages') %>
+
+      <div class="app-card">
+      <form method="get" action="/auditoria" class="form-inline justify-content-center mb-3">
+        <label class="mr-2" for="acao">Filtrar por ação</label>
+        <select id="acao" name="acao" class="form-control mr-2">
+          <option value="">Todas</option>
+          <% Object.entries(acoesDisponiveis).forEach(([valor, descricao]) => { %>
+            <option value="<%= valor %>" <%= acaoFiltrada === valor ? 'selected' : '' %>>
+              <%= descricao %>
+            </option>
+          <% }); %>
+        </select>
+        <button type="submit" class="btn btn-outline-primary">Aplicar</button>
+        <% if (acaoFiltrada) { %>
+          <a class="btn btn-link" href="/auditoria">Limpar</a>
+        <% } %>
+      </form>
+
+      <% if (registros.length === 0) { %>
+        <p class="text-center lead">
+          <% if (acaoFiltrada) { %>
+            Nenhuma atividade desse tipo no período retido.
+          <% } else { %>
+            Nenhuma atividade registrada ainda.
+          <% } %>
+        </p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-sm my-3">
+            <caption class="sr-only">Registro de atividades da conta</caption>
+            <thead>
+              <tr>
+                <th scope="col">Quando</th>
+                <th scope="col">O que aconteceu</th>
+                <th scope="col">Detalhes</th>
+                <th scope="col">Origem</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% registros.forEach((registro) => { %>
+                <tr class="<%= registro.houveFalha ? 'table-warning' : '' %>">
+                  <td class="text-nowrap">
+                    <time datetime="<%= registro.ocorridoEm.toISOString() %>">
+                      <%= registro.ocorridoEm.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %>
+                    </time>
+                  </td>
+                  <td>
+                    <%= registro.descricao %>
+                    <% if (registro.houveFalha) { %>
+                      <span class="badge badge-warning ml-1">falhou</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (registro.detalhes && registro.detalhes.nome) { %>
+                      <%= registro.detalhes.nome %>
+                    <% } else if (registro.detalhes && registro.detalhes.de) { %>
+                      <%= registro.detalhes.de %> → <%= registro.detalhes.para %>
+                    <% } else { %>
+                      <span class="text-muted">—</span>
+                    <% } %>
+                  </td>
+                  <td class="text-nowrap">
+                    <code class="small"><%= registro.ip || '—' %></code>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="text-muted small text-center">
+          <%= paginacao.total %> registro(s). Atividades mais antigas são removidas
+          automaticamente conforme a política de retenção.
+        </p>
+
+        <% if (paginacao.totalPages > 1) { %>
+          <nav aria-label="Paginação das atividades">
+            <ul class="pagination justify-content-center">
+              <li class="page-item <%= paginacao.page <= 1 ? 'disabled' : '' %>">
+                <a class="page-link" href="/auditoria?page=<%= paginacao.page - 1 %><%= acaoFiltrada ? '&acao=' + acaoFiltrada : '' %>">Anterior</a>
+              </li>
+              <li class="page-item disabled">
+                <span class="page-link">Página <%= paginacao.page %> de <%= paginacao.totalPages %></span>
+              </li>
+              <li class="page-item <%= paginacao.page >= paginacao.totalPages ? 'disabled' : '' %>">
+                <a class="page-link" href="/auditoria?page=<%= paginacao.page + 1 %><%= acaoFiltrada ? '&acao=' + acaoFiltrada : '' %>">Próxima</a>
+              </li>
+            </ul>
+          </nav>
+        <% } %>
+      <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('includes/footer'); %>

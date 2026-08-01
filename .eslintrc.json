@@ -1,0 +1,55 @@
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2023": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2023,
+    "sourceType": "script"
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-console": "error",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_|^next$" }],
+    "no-return-await": "error",
+    "require-atomic-updates": "error",
+    "no-await-in-loop": "warn",
+    "eqeqeq": ["error", "smart"],
+    "prefer-const": "error",
+    "no-var": "error",
+    "consistent-return": "warn",
+    "handle-callback-err": "error"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": { "node": true },
+      "rules": { "no-await-in-loop": "off" }
+    },
+    {
+      "files": ["scripts/**/*.js"],
+      "rules": { "no-console": "off" }
+    },
+    {
+      // Portas (interfaces). Os parâmetros não são usados porque o método
+      // apenas lança — mas seus nomes SÃO o contrato que os adaptadores
+      // precisam honrar. Removê-los apagaria a documentação da assinatura.
+      "files": [
+        "src/domain/repositories/**/*.js",
+        "src/domain/ports/**/*.js",
+        "src/application/ports/**/*.js"
+      ],
+      "rules": { "no-unused-vars": ["error", { "args": "none" }] }
+    },
+    {
+      // Scripts do k6 rodam em runtime próprio (goja), com módulos ESM e o
+      // global __ENV — não são executados pelo Node.
+      "files": ["tests/load/**/*.js"],
+      "parserOptions": { "sourceType": "module" },
+      "env": { "node": false },
+      "globals": { "__ENV": "readonly", "__VU": "readonly", "__ITER": "readonly" }
+    }
+  ],
+  "ignorePatterns": ["node_modules/", "public/assets/", "coverage/", "infra/"]
+}

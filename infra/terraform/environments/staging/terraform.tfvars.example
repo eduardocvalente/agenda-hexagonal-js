@@ -1,0 +1,17 @@
+# Copie para terraform.tfvars (que está no .gitignore) e ajuste.
+# Nenhum segredo aqui: credenciais vivem no Secrets Manager.
+
+project = "cadastro-usuario"
+region  = "us-east-1"
+
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# Certificado ACM já validado, na MESMA região do ALB.
+certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+
+# Restrinja ao IP de saída da sua rede em vez de deixar staging público.
+allowed_cidrs = ["0.0.0.0/0"]
+
+image_tag = "latest"
+
+alert_emails = ["voce@exemplo.com"]

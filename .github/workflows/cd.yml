@@ -1,0 +1,196 @@
+name: CD (AWS ECS — referência, não aplicado)
+
+# ATENÇÃO: este pipeline descreve o deploy na infraestrutura AWS definida em
+# `infra/terraform` (ECS Fargate + ECR, com staging, aprovação manual e
+# rollback automático). Essa infraestrutura NUNCA foi provisionada — o
+# ambiente publicado hoje é o Fly.io, e o deploy real acontece pela
+# integração nativa Fly.io ↔ GitHub a cada push em `main`.
+#
+# Por isso o gatilho é MANUAL: rodando em todo push, este job falharia sempre
+# (não existem as roles OIDC nem os clusters), enchendo o histórico do
+# repositório de execuções vermelhas que não indicam defeito algum.
+#
+# Para ativá-lo de verdade: aplicar o Terraform, criar a role de deploy e
+# preencher os segredos AWS_DEPLOY_ROLE_ARN e ECS_NETWORK_CONFIG_*.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente de destino
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22.11.0'
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: cadastro-usuario
+
+jobs:
+  build-and-push:
+    name: Publicar imagem no ECR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # OIDC: o runner assume uma role da AWS por token de curta duração.
+      # Nenhuma chave de acesso estática fica guardada no GitHub.
+      id-token: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - id: meta
+        run: |
+          REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          echo "image=${REGISTRY}/${ECR_REPOSITORY}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Tag imutável pelo SHA. `latest` só existe para conveniência local —
+          # o deploy sempre referencia o digest.
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+            ${{ steps.meta.outputs.image }}:latest
+          build-args: APP_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+  deploy-staging:
+    name: Deploy em staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.exemplo.com.br
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Aplicar migrations
+        run: |
+          aws ecs run-task \
+            --cluster cadastro-usuario-staging \
+            --task-definition cadastro-usuario-migrate-staging \
+            --launch-type FARGATE \
+            --network-configuration "${{ secrets.ECS_NETWORK_CONFIG_STAGING }}" \
+            --overrides '{"containerOverrides":[{"name":"app","command":["npm","run","migrate"]}]}'
+
+      - name: Atualizar serviço (rolling update)
+        run: |
+          aws ecs update-service \
+            --cluster cadastro-usuario-staging \
+            --service cadastro-usuario \
+            --force-new-deployment
+          aws ecs wait services-stable \
+            --cluster cadastro-usuario-staging \
+            --services cadastro-usuario
+
+      - name: Smoke test
+        run: |
+          set -e
+          curl -fsS https://staging.exemplo.com.br/healthz
+          curl -fsS https://staging.exemplo.com.br/readyz
+          # Falha se a home não responder 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' https://staging.exemplo.com.br/)" = "200"
+
+  deploy-production:
+    name: Deploy em produção
+    needs: [build-and-push, deploy-staging]
+    runs-on: ubuntu-latest
+    # `environment: production` com required reviewers no repositório é o que
+    # transforma isso em aprovação manual obrigatória.
+    environment:
+      name: production
+      url: https://exemplo.com.br
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Guardar a task definition atual (para rollback)
+        id: previous
+        run: |
+          ARN=$(aws ecs describe-services \
+            --cluster cadastro-usuario-production \
+            --services cadastro-usuario \
+            --query 'services[0].taskDefinition' --output text)
+          echo "task_definition=$ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Aplicar migrations
+        run: |
+          aws ecs run-task \
+            --cluster cadastro-usuario-production \
+            --task-definition cadastro-usuario-migrate-production \
+            --launch-type FARGATE \
+            --network-configuration "${{ secrets.ECS_NETWORK_CONFIG_PRODUCTION }}" \
+            --overrides '{"containerOverrides":[{"name":"app","command":["npm","run","migrate"]}]}'
+
+      - name: Deploy
+        run: |
+          aws ecs update-service \
+            --cluster cadastro-usuario-production \
+            --service cadastro-usuario \
+            --force-new-deployment
+          aws ecs wait services-stable \
+            --cluster cadastro-usuario-production \
+            --services cadastro-usuario
+
+      - name: Smoke test
+        id: smoke
+        run: |
+          set -e
+          curl -fsS https://exemplo.com.br/healthz
+          curl -fsS https://exemplo.com.br/readyz
+
+      # Rollback automático: o ECS já faz circuit breaker no rolling update,
+      # mas isso cobre a falha detectada só pelo smoke test.
+      - name: Rollback
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          aws ecs update-service \
+            --cluster cadastro-usuario-production \
+            --service cadastro-usuario \
+            --task-definition ${{ steps.previous.outputs.task_definition }} \
+            --force-new-deployment
+          aws ecs wait services-stable \
+            --cluster cadastro-usuario-production \
+            --services cadastro-usuario
+          echo "::error::Deploy revertido para ${{ steps.previous.outputs.task_definition }}"
+          exit 1

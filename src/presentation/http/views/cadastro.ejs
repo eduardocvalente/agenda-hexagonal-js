@@ -1,0 +1,85 @@
+<%- include('includes/head'); %>
+<%- include('includes/nav'); %>
+
+<main class="container" id="conteudo">
+  <div class="row justify-content-center">
+    <div class="col-xl-9 my-4">
+      <%- include('includes/messages'); %>
+
+      <div class="auth-grid">
+        <%- include('includes/auth-painel'); %>
+
+        <div class="app-card auth-card">
+          <div class="page-head">
+            <h1>Criar sua conta</h1>
+            <p class="subtitle mb-0">Leva menos de um minuto. Só e-mail e senha.</p>
+          </div>
+
+          <form action="/login/register" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div class="form-group">
+              <label for="register-email">Seu e-mail</label>
+              <input id="register-email" type="email" class="form-control" name="email"
+                     required maxlength="254" autocomplete="username" autofocus>
+            </div>
+
+            <div class="form-group">
+              <label for="register-password">Sua senha</label>
+              <div class="campo-senha">
+                <input id="register-password" type="password" class="form-control" name="password"
+                       required minlength="12" maxlength="128" autocomplete="new-password"
+                       data-medidor-senha="medidor-cadastro" aria-describedby="senha-ajuda">
+                <button type="button" class="alternar-senha" data-alternar-senha="register-password"
+                  aria-label="Mostrar senha" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <div class="medidor-senha" id="medidor-cadastro" aria-live="polite">
+                <div class="medidor-trilho" aria-hidden="true">
+                  <div class="medidor-preenchido"></div>
+                </div>
+                <small class="medidor-texto form-text text-muted" id="senha-ajuda">
+                  Mínimo de 12 caracteres. Evite sequências numéricas ou repetições.
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="register-password2">Confirme a senha</label>
+              <div class="campo-senha">
+                <input id="register-password2" type="password" class="form-control" name="confirmarSenha"
+                       required maxlength="128" autocomplete="new-password"
+                       data-confirma-senha-de="register-password"
+                       aria-describedby="confirmacao-aviso">
+                <button type="button" class="alternar-senha" data-alternar-senha="register-password2"
+                  aria-label="Mostrar senha" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <small id="confirmacao-aviso" class="form-text text-danger d-none"
+                aria-live="polite">As senhas não conferem.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Criar minha conta</button>
+          </form>
+
+          <p class="auth-alternativa">
+            Já tem conta?
+            <a href="/login/index">Entrar</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('includes/footer'); %>

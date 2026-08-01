@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Patches agrupados em um único PR: revisar 1 PR por semana é sustentável,
+      # revisar 15 não é — e PRs ignorados são a origem de dependência vulnerável.
+      patches:
+        update-types: ['patch']
+      dev-dependencies:
+        dependency-type: development
+    labels: ['dependencies']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ['dependencies', 'ci']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ['dependencies', 'docker']
+
+  - package-ecosystem: terraform
+    directory: /infra/terraform
+    schedule:
+      interval: monthly
+    labels: ['dependencies', 'infra']
